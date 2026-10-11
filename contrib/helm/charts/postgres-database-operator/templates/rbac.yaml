@@ -1,0 +1,53 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: postgres-database-operator-account
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: postgres-database-operator-role-cluster
+rules:
+
+  # Framework: knowing which other operators are running (i.e. peering).
+  - apiGroups: [zalando.org]
+    resources: [clusterkopfpeerings]
+    verbs: [list, watch, patch, get]
+  - apiGroups: [apiextensions.k8s.io]
+    resources: [customresourcedefinitions]
+    verbs: [list, get]
+
+  - apiGroups: [postgres.database.k8s.jkroepke.de]
+    resources: [postgresdatabases]
+    verbs: [list, watch, patch]
+
+  - apiGroups: [postgres.database.k8s.jkroepke.de]
+    resources: [postgresdatabases/status, postgresdatabases/finalizers]
+    verbs: [get, list, watch, update, patch]
+
+
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [create]
+
+  # Framework: posting the events about the handlers progress/errors.
+  - apiGroups: [events.k8s.io]
+    resources: [events]
+    verbs: [create]
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: postgres-database-operator-rolebinding-cluster
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: postgres-database-operator-role-cluster
+subjects:
+  - kind: ServiceAccount
+    name: postgres-database-operator-account
+    namespace: "{{ .Release.Namespace }}"

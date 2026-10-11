@@ -1,0 +1,6 @@
+apiVersion: postgres.database.k8s.jkroepke.de/v1alpha1
+kind: PostgresDatabase
+metadata:
+  name: example-postgresdatabase
+spec:
+  secretName: example-postgresdatabase
